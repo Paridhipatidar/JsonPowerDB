@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Enrollment Form</title>
+
+    <script src="https://login2explore.com/jpdb/resources/js/0.0.4/jpdb-commons.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            padding: 30px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 300px;
+        }
+        button {
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body onload="initForm()">
+
+<h2>Student Enrollment Form</h2>
+
+<label>Roll No</label><br>
+<input type="text" id="rollNo" onblur="checkRollNo()"><br>
+
+<label>Full Name</label><br>
+<input type="text" id="fullName"><br>
+
+<label>Class</label><br>
+<input type="text" id="class"><br>
+
+<label>Birth Date</label><br>
+<input type="date" id="birthDate"><br>
+
+<label>Address</label><br>
+<input type="text" id="address"><br>
+
+<label>Enrollment Date</label><br>
+<input type="date" id="enrollDate"><br><br>
+
+<button id="saveBtn" onclick="saveData()">Save</button>
+<button id="updateBtn" onclick="updateData()">Update</button>
+<button onclick="resetForm()">Reset</button>
+
+<script>
+    const dbName = "SCHOOL-DB";
+    const relName = "STUDENT-TABLE";
+    const baseUrl = "http://api.login2explore.com:5577";
+    const connToken = "YOUR_CONNECTION_TOKEN_HERE";
+
+    function initForm() {
+        resetForm();
+        document.getElementById("rollNo").focus();
+    }
+
+    function disableFields(flag) {
+        document.getElementById("fullName").disabled = flag;
+        document.getElementById("class").disabled = flag;
+        document.getElementById("birthDate").disabled = flag;
+        document.getElementById("address").disabled = flag;
+        document.getElementById("enrollDate").disabled = flag;
+    }
+
+    function resetForm() {
+        document.getElementById("rollNo").value = "";
+        document.getElementById("fullName").value = "";
+        document.getElementById("class").value = "";
+        document.getElementById("birthDate").value = "";
+        document.getElementById("address").value = "";
+        document.getElementById("enrollDate").value = "";
+
+        document.getElementById("rollNo").disabled = false;
+        disableFields(true);
+
+        document.getElementById("saveBtn").disabled = true;
+        document.getElementById("updateBtn").disabled = true;
+
+        document.getElementById("rollNo").focus();
+    }
+
+    function checkRollNo() {
+        let roll = document.getElementById("rollNo").value;
+        if (roll === "") return;
+
+        let req = createGET_BY_KEYRequest(connToken, dbName, relName,
+            JSON.stringify({ "Roll-No": roll }));
+
+        jQuery.ajaxSetup({ async: false });
+        let res = executeCommandAtGivenBaseUrl(req, baseUrl, "/api/irl");
+
+        if (res.status === 200) {
+            let data = JSON.parse(res.data).record;
+            fillData(data);
+            document.getElementById("updateBtn").disabled = false;
+            document.getElementById("rollNo").disabled = true;
+        } else {
+            disableFields(false);
+            document.getElementById("saveBtn").disabled = false;
+        }
+
+        document.getElementById("fullName").focus();
+    }
+
+    function fillData(data) {
+        disableFields(false);
+        document.getElementById("fullName").value = data["Full-Name"];
+        document.getElementById("class").value = data["Class"];
+        document.getElementById("birthDate").value = data["Birth-Date"];
+        document.getElementById("address").value = data["Address"];
+        document.getElementById("enrollDate").value = data["Enrollment-Date"];
+    }
+
+    function validateForm() {
+        return (
+            rollNo.value && fullName.value && class.value &&
+            birthDate.value && address.value && enrollDate.value
+        );
+    }
+
+    function saveData() {
+        if (!validateForm()) {
+            alert("All fields are required!");
+            return;
+        }
+
+        let data = {
+            "Roll-No": rollNo.value,
+            "Full-Name": fullName.value,
+            "Class": class.value,
+            "Birth-Date": birthDate.value,
+            "Address": address.value,
+            "Enrollment-Date": enrollDate.value
+        };
+
+        let req = createPUTRequest(connToken,
+            JSON.stringify(data), dbName, relName);
+
+        jQuery.ajaxSetup({ async: false });
+        executeCommandAtGivenBaseUrl(req, baseUrl, "/api/iml");
+        resetForm();
+    }
+
+    function updateData() {
+        if (!validateForm()) {
+            alert("All fields are required!");
+            return;
+        }
+
+        let data = {
+            "Roll-No": rollNo.value,
+            "Full-Name": fullName.value,
+            "Class": class.value,
+            "Birth-Date": birthDate.value,
+            "Address": address.value,
+            "Enrollment-Date": enrollDate.value
+        };
+
+        let req = createUPDATERecordRequest(connToken,
+            JSON.stringify(data), dbName, relName, rollNo.value);
+
+        jQuery.ajaxSetup({ async: false });
+        executeCommandAtGivenBaseUrl(req, baseUrl, "/api/iml");
+        resetForm();
+    }
+</script>
+
+</body>
+</html>
